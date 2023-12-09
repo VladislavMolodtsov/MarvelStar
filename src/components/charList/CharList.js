@@ -77,6 +77,7 @@ const CharList = (props) => {
                     tabIndex={0}
                     key={item.id}
                     ref={(el) => itemRefs.current[i] = el}
+                    // itemRefs.current - в данной ф-ии возвращает undefined, но когда в параметрах мы передаем el - только тогда мы получаем элемент li который мы помещаем внутрь массива itemRefs = useRef([]);
                     onClick={() => {
                         props.onCharSelected(item.id);
                         focusOnItem(i);

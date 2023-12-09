@@ -18,7 +18,7 @@ const CharInfo = (props) => {
     const marvelService = new MarvelService();
 
     useEffect(() => {
-        updateChar()
+        updateChar();
     }, [props.charId])
 
     const updateChar = () => {
@@ -55,6 +55,7 @@ const CharInfo = (props) => {
     const content = !(loading || error || !char) ? <View char={char}/> : null;
 
     return (
+        
         <div className="char__info">
             {skeleton}
             {spinner}
