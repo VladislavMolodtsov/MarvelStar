@@ -1,29 +1,28 @@
-class MarvelService {
-    _apiBase = 'https://gateway.marvel.com:443/v1/public/';
-    _apiKey = 'apikey=0b17abbf01ba2a59203081d3184f691e';
-    _offsetBase = 210;
+import { useHttp } from "../hooks/http.hook";
+// Запросами занимается useHttp
+// Когда MarvelService будет вызываться внутри него будет вызываться ф-ия useHttp() (наш кастомный хук, который отдаст нам объект с loading, request, error, clearError)
 
-    getResource = async (url) => {
-        let res = await fetch(url);
-    
-        if (!res.ok) {
-            throw new Error(`Could not fetch ${url}, status: ${res.status}`);
-        }
-    
-        return await res.json();
+// useMarvelService - теперь это кастомный хук, который занимается запросом и трансформацией данных
+const useMarvelService = () => {
+    const _apiBase = 'https://gateway.marvel.com:443/v1/public/';
+    const _apiKey = 'apikey=0b17abbf01ba2a59203081d3184f691e';
+    const _offsetBase = 210;
+
+    const {loading, request, error, clearError} = useHttp();
+    // Второй способ это возможность вытащить сущность с этого hook
+
+    // Для того чтобы работали методы мы подставляем const
+    const getAllCharacters = async (offset = _offsetBase) => {
+        const res = await request(`${_apiBase}characters?limit=9&offset=${offset}&${_apiKey}`);
+        return res.data.results.map(_transformCharacter);
     }
 
-    getAllCharacters = async (offset = this._offsetBase) => {
-        const res = await this.getResource(`${this._apiBase}characters?limit=9&offset=${offset}&${this._apiKey}`);
-        return res.data.results.map(this._transformCharacter);
+    const getCharacter = async (id) => {
+        const res = await request(`${_apiBase}characters/${id}?${_apiKey}`);
+        return _transformCharacter(res.data.results[0]);
     }
 
-    getCharacter = async (id) => {
-        const res = await this.getResource(`${this._apiBase}characters/${id}?${this._apiKey}`);
-        return this._transformCharacter(res.data.results[0]);
-    }
-
-    _transformCharacter = (char) => {
+    const _transformCharacter = (char) => {
         return {
             id: char.id,
             name: char.name,
@@ -34,6 +33,10 @@ class MarvelService {
             comics: char.comics.items
         }
     }
+
+    // Так как это ф-ия, мы можем что-то из нее вернуть
+    // Когда будет вызыватся useMarvelService, мы будем возвращать
+    return {loading, error, clearError, getAllCharacters, getCharacter}
 }
 
-export default MarvelService;
+export default useMarvelService;
