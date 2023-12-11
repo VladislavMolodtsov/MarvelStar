@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 
 import './charList.scss';
 // import abyss from '../../resources/img/abyss.jpg';
@@ -11,28 +11,22 @@ import './charList.scss';
 const CharList = (props) => {
 
     const [charList, setCharList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
     const [newItemLoading, setNewItemLoading] = useState(false);
     const [charEnded, setCharEnded] = useState(false);
     const [offset, setOffset] = useState(210);
 
-    const marvelService = new MarvelService();
+    const {loading, error, getAllCharacters} = useMarvelService();
 
     useEffect(() => {
-        onUpdateChar();
+        onUpdateChar(offset, true);
+        // Еслм передать вторым аргументом true, то я скажу коду, что это первичная загрузка (это значит что свойство newItemLoading будет со значением false и нам не нужно его активировать)
+        // Но если у нас идет повторная загрузка, то вызывается ф-ия setNewItemLoading и изменяет его на true
     }, [])
 
-    const onUpdateChar = (offset) => {
-        onItemLoading();
-
-        marvelService.getAllCharacters(offset)
+    const onUpdateChar = (offset, initial) => {
+        initial ? setNewItemLoading(false) : setNewItemLoading(true);
+        getAllCharacters(offset)
             .then(onCharLoaded)
-            .catch(onError)
-    }
-
-    const onItemLoading = () => {
-        setNewItemLoading(true)
     }
 
     const onCharLoaded = (newCharList) => {
@@ -42,16 +36,9 @@ const CharList = (props) => {
         }
 
         setCharList(charList => [...charList, ...newCharList]);
-        setLoading(false);
-        setError(false);
         setNewItemLoading(false);
         setCharEnded(ended);
         setOffset(offset => offset + 9)
-    }
-
-    const onError = () => {
-        setError(true);
-        setLoading(false);
     }
 
     const itemRefs = useRef([]);
@@ -105,14 +92,14 @@ const CharList = (props) => {
     const items = renderItems(charList);
 
     const errorMessage = error ? <ErrorMessage/> : null;
-    const spinner = loading ? <Spinner/> : null;
-    const content = !(loading || error) ? items : null;
+    const spinner = loading && !newItemLoading ? <Spinner/> : null;
+    // У меня есть загрузка, но при этом это не загрузка новых компонентов(персонажей)
 
     return (
         <div className="char__list">
             {errorMessage}
             {spinner}
-            {content}
+            {items}
             <button 
                 className="button button__main button__long"
                 disabled={newItemLoading}
