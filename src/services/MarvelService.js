@@ -22,6 +22,16 @@ const useMarvelService = () => {
         return _transformCharacter(res.data.results[0]);
     }
 
+    const getAllComics = async (offset = 0) => {
+        const res = await request(`${_apiBase}comics?orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`)
+        return res.data.result.map(_transformComics);
+    }
+
+    const getComics = async (id) => {
+        const res = await request(`${_apiBase}comics/${id}?${_apiKey}`);
+        return await _transformComics(res.data.result[0]);
+    }
+
     const _transformCharacter = (char) => {
         return {
             id: char.id,
@@ -34,9 +44,31 @@ const useMarvelService = () => {
         }
     }
 
+    const _transformComics = (comics) => {
+        return {
+            id: comics.id,
+            title: comics.title,
+            description: comics.description || 'There is no description',
+            pageCount: comics.pageCount ? `${comics.pageCount} p.` : 'No information about the number of pages',
+            thumbnail: comics.thumbnail + '.' + comics.path,
+            language: comics.textObject[0].language || 'en-us',
+            // optional chaining operator
+            price: comics.prices[0].price || 'not available'
+
+        }
+    }
+
     // Так как это ф-ия, мы можем что-то из нее вернуть
     // Когда будет вызыватся useMarvelService, мы будем возвращать
-    return {loading, error, clearError, getAllCharacters, getCharacter}
+    return {
+        loading,
+        error,
+        clearError,
+        getAllCharacters,
+        getCharacter,
+        getAllComics,
+        getComics
+    }
 }
 
 export default useMarvelService;
